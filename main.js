@@ -43,8 +43,37 @@ class Player {
   }
 }
 
+// Define the Projectile class
+class Projectile{
+  constructor({position, velocity}){
+    this.position = position
+    this.velocity = velocity
+
+    this.radius = 3
+  }
+
+  // Draw the projectile on the canvas
+  draw(){
+    c.beginPath()
+    c.arc(this.position.x,this.position.y,this.radius,0,Math.PI*2)
+    c.fillStyle = 'red'
+    c.fill()
+    c.closePath()
+  }
+
+  // Update the projectile's position based on its velocity
+  update(){
+    this.draw()
+    this.position.x += this.velocity.x
+    this.position.y += this.velocity.y
+  }
+}
+
 // Create an instance of the Player class
 const player = new Player();
+
+// Create an array to store projectile objects
+const projectiles = []
 
 // Define the keys object to track the state of each key
 const keys = {
@@ -63,12 +92,25 @@ const keys = {
 function animate() {
   window.requestAnimationFrame(animate);
 
-  // Clear the canvas
+  // Set the background of the canvas to black
   c.fillStyle = 'black';
   c.fillRect(0, 0, canvas.width, canvas.height);
 
   // Update the player
   player.update();
+
+  // Update all projectiles in the projectiles array
+  projectiles.forEach((projectile, index) =>{
+
+    // Remove the projectile from the array if it has gone off the top of the canvas
+    if(projectile.position.y + projectile.radius <= 0){
+      setTimeout(() => {
+        projectiles.splice(index,1)
+      }, 0);
+    }
+    else
+      projectile.update()
+  })
 
   // Update the player's velocity based on the state of the keys
   if (keys.a.pressed && player.position.x >= 0) {
@@ -93,6 +135,17 @@ addEventListener('keydown', ({ key }) => {
       keys.d.pressed = true;
       break;
     case ' ':
+      // Add a new projectile object to the projectiles array when the space bar is pressed
+      projectiles.push(new Projectile({
+        position:{
+          x:player.position.x+player.width/2,
+          y:player.position.y
+        },
+        velocity:{
+          x:0,
+          y:-10
+        }
+      }))
       break;
   }
 });
