@@ -69,11 +69,53 @@ class Projectile{
   }
 }
 
+//Define the Invader class
+class Invader {
+  constructor() {
+    // Initialize the velocity property
+    this.velocity = {
+      x: 0,
+      y: 0
+    };
+
+    // Load the image and set the width and height properties
+    // based on the image's dimensions and a scale factor
+    const image = new Image();
+    image.src = 'invader.png';
+    image.onload = () => {
+      const scale = 1;
+      this.image = image;
+      this.width = image.width * scale;
+      this.height = image.height * scale;
+      this.position = {
+        x: canvas.width / 2 - this.width / 2,
+        y: canvas.height / 2
+      };
+    };
+  }
+
+  // Draw the invader on the canvas
+  draw() {
+    c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+  }
+
+  // Update the invaders's position based on its velocity
+  update() {
+    if (this.image) {
+      this.draw();
+      this.position.x += this.velocity.x;
+      this.position.y += this.velocity.y;
+    }
+  }
+}
+
 // Create an instance of the Player class
 const player = new Player();
 
 // Create an array to store projectile objects
 const projectiles = []
+
+const invader = new Invader()
 
 // Define the keys object to track the state of each key
 const keys = {
@@ -96,6 +138,8 @@ function animate() {
   c.fillStyle = 'black';
   c.fillRect(0, 0, canvas.width, canvas.height);
 
+  // Display the invader on the canvas
+  invader.update()
   // Update the player
   player.update();
 
