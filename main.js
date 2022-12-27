@@ -48,7 +48,6 @@ class Projectile{
   constructor({position, velocity}){
     this.position = position
     this.velocity = velocity
-
     this.radius = 3
   }
 
@@ -71,7 +70,7 @@ class Projectile{
 
 //Define the Invader class
 class Invader {
-  constructor() {
+  constructor({position}) {
     // Initialize the velocity property
     this.velocity = {
       x: 0,
@@ -88,8 +87,8 @@ class Invader {
       this.width = image.width * scale;
       this.height = image.height * scale;
       this.position = {
-        x: canvas.width / 2 - this.width / 2,
-        y: canvas.height / 2
+        x: position.x,
+        y: position.y
       };
     };
   }
@@ -100,11 +99,60 @@ class Invader {
   }
 
   // Update the invaders's position based on its velocity
-  update() {
+  update({velocity}) {
     if (this.image) {
       this.draw();
-      this.position.x += this.velocity.x;
-      this.position.y += this.velocity.y;
+      this.position.x += velocity.x;
+      this.position.y += velocity.y;
+    }
+  }
+}
+//Define the Grid class for the invaders
+class Grid {
+  constructor(){
+    this.position = {
+      x: 0,
+      y: 0
+    }
+
+    this.velocity = {
+      x: 3,
+      y: 0
+    }
+
+    this.invaders = []
+
+    // Create a number of invaders spawned in a collumn
+    const cols = Math.floor(Math.random() * 10 + 5)
+    
+    // Create a number of invaders spawned in a row
+    const rows = Math.floor(Math.random() * 5 + 2)
+
+    this.width = cols * 45
+
+    // Spawning invaders in rows and collumns using for loops
+    for(let x = 0; x < cols; x++){
+      for(let y = 0; y < rows; y++){
+      this.invaders.push(new Invader({position: {
+        x: x * 45,
+        y: y * 35
+      }}))
+      }
+    }
+  }
+
+  update(){
+
+    // Move the grid along the x axis
+    this.position.x += this.velocity.x
+
+    // Setting the grid velocity along y axis to zero for each frame
+    this.velocity.y = 0
+
+    // Bouncing the grid when hitting the edge of the canvas and moving the grid down
+    if(this.position.x + this.width > canvas.width || this.position.x <= 0){
+      this.velocity.x = -this.velocity.x
+      this.velocity.y = 35
     }
   }
 }
@@ -115,7 +163,8 @@ const player = new Player();
 // Create an array to store projectile objects
 const projectiles = []
 
-const invader = new Invader()
+// Create an array to store grid objets
+const grids = [new Grid()]
 
 // Define the keys object to track the state of each key
 const keys = {
@@ -138,8 +187,6 @@ function animate() {
   c.fillStyle = 'black';
   c.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Display the invader on the canvas
-  invader.update()
   // Update the player
   player.update();
 
@@ -155,6 +202,13 @@ function animate() {
     else
       projectile.update()
   })
+
+  grids.forEach(grid => {
+    grid.update()
+    grid.invaders.forEach(invader => {
+      invader.update({velocity: grid.velocity})
+    })
+  });
 
   // Update the player's velocity based on the state of the keys
   if (keys.a.pressed && player.position.x >= 0) {
