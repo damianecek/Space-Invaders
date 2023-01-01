@@ -164,7 +164,7 @@ const player = new Player();
 const projectiles = []
 
 // Create an array to store grid objets
-const grids = [new Grid()]
+const grids = []
 
 // Define the keys object to track the state of each key
 const keys = {
@@ -178,6 +178,12 @@ const keys = {
     pressed: false
   }
 };
+
+// Initialize frames variable to keep track of frames passed
+let frames = 0
+
+// A random number to randomize intervals of Invader spawns
+let randomInterval = Math.floor(Math.random() * 500 + 500)
 
 // The animate function is called repeatedly to update the canvas
 function animate() {
@@ -218,6 +224,16 @@ function animate() {
   } else {
     player.velocity.x = 0;
   }
+
+  // Spawns a new grid of Invaders if X frames passed
+  if(frames % randomInterval === 0){
+    grids.push(new Grid())
+    randomInterval = Math.floor(Math.random() * 500 + 500)
+    frames = 0
+  }
+
+  // Updates the variable when animation loop is finished
+  frames++
 }
 
 // Start the animation loop
