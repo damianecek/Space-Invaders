@@ -1,6 +1,12 @@
+// Define the canvas and the dimensions
 const canvas = document.querySelector('canvas');
 const c = canvas.getContext('2d');
 
+// Remove the scrollbars and fixed inappropriate canvas size on some browsers
+document.documentElement.style.overflow = 'hidden';
+document.body.style.overflow = 'hidden';
+
+// Set the canvas width and height to the viewport size
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 
@@ -48,7 +54,7 @@ class Projectile{
   constructor({position, velocity}){
     this.position = position
     this.velocity = velocity
-    this.radius = 3
+    this.radius = 4
   }
 
   // Draw the projectile on the canvas
@@ -68,7 +74,7 @@ class Projectile{
   }
 }
 
-//Define the Invader class
+// Define the Invader class
 class Invader {
   constructor({position}) {
     // Initialize the velocity property
@@ -107,7 +113,7 @@ class Invader {
     }
   }
 }
-//Define the Grid class for the invaders
+// Define the Grid class for the invaders
 class Grid {
   constructor(){
     this.position = {
@@ -209,10 +215,31 @@ function animate() {
       projectile.update()
   })
 
+  // Update every invader in a grid
   grids.forEach(grid => {
     grid.update()
-    grid.invaders.forEach(invader => {
+    grid.invaders.forEach((invader, i) => {
       invader.update({velocity: grid.velocity})
+
+      // Collision detection for both the invader and the projectile + removing them from the game
+      projectiles.forEach((projectile, j) => {
+        if (projectile.position.y - projectile.radius <= invader.position.y + invader.height &&
+            projectile.position.x + projectile.radius >= invader.position.x &&
+            projectile.position.x - projectile.radius <= invader.position.x + invader.width &&
+            projectile.position.y + projectile.radius >= invader.position.y) {
+
+          setTimeout(() => {
+            const invaderFound = grid.invaders.find((invader2) => invader2 === invader)
+            const projectileFound = projectiles.find((projectile2) => projectile2 === projectile)
+
+            if(invaderFound && projectileFound){
+              grid.invaders.splice(i, 1) 
+              projectiles.splice(j, 1)
+            }
+          }, 0)
+
+        }
+      });
     })
   });
 
