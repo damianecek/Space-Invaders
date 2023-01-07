@@ -216,7 +216,7 @@ function animate() {
   })
 
   // Update every invader in a grid
-  grids.forEach(grid => {
+  grids.forEach((grid, gridIndex) => {
     grid.update()
     grid.invaders.forEach((invader, i) => {
       invader.update({velocity: grid.velocity})
@@ -232,9 +232,21 @@ function animate() {
             const invaderFound = grid.invaders.find((invader2) => invader2 === invader)
             const projectileFound = projectiles.find((projectile2) => projectile2 === projectile)
 
+            // Remove invader and projectile
             if(invaderFound && projectileFound){
               grid.invaders.splice(i, 1) 
               projectiles.splice(j, 1)
+
+              // Update the grid width based on the invaders inside
+              if(grid.invaders.length > 0){
+                const firstInvader = grid.invaders[0]
+                const lastInvader = grid.invaders[grid.invaders.length - 1]
+                grid.width = lastInvader.position.x - firstInvader.position.x + lastInvader.width
+                grid.position.x = firstInvader.position.x
+              }
+              else{
+                grids.splice(gridIndex, 1)
+              }
             }
           }, 0)
 
