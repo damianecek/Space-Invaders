@@ -74,6 +74,29 @@ class Projectile{
   }
 }
 
+// Define the InvaderProjectile class
+class InvaderProjectile{
+  constructor({position, velocity}){
+    this.position = position
+    this.velocity = velocity
+    this.width = 7
+    this.height = 10
+  }
+
+  // Draw the projectile on the canvas
+  draw(){
+    c.fillStyle = 'green'
+    c.fillRect(this.position.x, this.position.y, this.width, this.height)
+  }
+
+  // Update the projectile's position based on its velocity
+  update(){
+    this.draw()
+    this.position.x += this.velocity.x
+    this.position.y += this.velocity.y
+  }
+}
+
 // Define the Invader class
 class Invader {
   constructor({position}) {
@@ -111,6 +134,19 @@ class Invader {
       this.position.x += velocity.x;
       this.position.y += velocity.y;
     }
+  }
+
+  shoot(invaderProjectiles){
+    invaderProjectiles.push(new InvaderProjectile({
+      position: {
+        x: this.position.x + this.width / 2,
+        y: this.position.y + this.height
+      },
+      velocity: {
+        x: 0,
+        y: 5
+      }
+    }))
   }
 }
 // Define the Grid class for the invaders
@@ -172,6 +208,9 @@ const projectiles = []
 // Create an array to store grid objets
 const grids = []
 
+// Create an array to store invader projectiles
+const invaderProjectiles = []
+
 // Define the keys object to track the state of each key
 const keys = {
   a: {
@@ -202,6 +241,23 @@ function animate() {
   // Update the player
   player.update();
 
+  // Render out invader projectiles on the canvas
+  invaderProjectiles.forEach((invaderProjectile,index) => {
+
+    // Remove the invader projectile from the array if it has gone off the bottom of the canvas
+    if(invaderProjectile.position.y + invaderProjectile.height >= canvas.height){
+      setTimeout(() => {
+        invaderProjectiles.splice(index,1)
+      }, 0);
+    }
+    else
+      invaderProjectile.update()
+
+    // Collision detection for invader projectile and player
+    if(invaderProjectile.position.y + invaderProjectile.height >= player.position.y && invaderProjectile.position.x + invaderProjectile.width >= player.position.x && invaderProjectile.position.x <= player.position.x + player.width)
+      console.log("END")
+  })
+
   // Update all projectiles in the projectiles array
   projectiles.forEach((projectile, index) =>{
 
@@ -218,6 +274,11 @@ function animate() {
   // Update every invader in a grid
   grids.forEach((grid, gridIndex) => {
     grid.update()
+
+      // Spawn invader projectiles
+      if(frames % 100 === 0 && grid.invaders.length > 0)
+        grid.invaders[Math.floor(Math.random() * grid.invaders.length)].shoot(invaderProjectiles)
+
     grid.invaders.forEach((invader, i) => {
       invader.update({velocity: grid.velocity})
 
