@@ -2,6 +2,9 @@
 const canvas = document.querySelector('canvas');
 const c = canvas.getContext('2d');
 
+// Define the score counter element
+const scoreEl = document.getElementById('scoreEl');
+
 // Remove the scrollbars and fixed inappropriate canvas size on some browsers
 document.documentElement.style.overflow = 'hidden';
 document.body.style.overflow = 'hidden';
@@ -18,6 +21,9 @@ class Player {
       x: 0,
       y: 0
     }
+
+    // Initialize the opacity property
+    this.opacity = 1
 
     // Load the image and set the width and height properties
     // based on the image's dimensions and a scale factor
@@ -37,7 +43,10 @@ class Player {
 
   // Draw the player on the canvas
   draw() {
+    c.save()
+    c.globalAlpha = this.opacity
     c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+    c.restore()
   }
 
   // Update the player's position based on its velocity
@@ -76,12 +85,13 @@ class Projectile{
 
 // Define the Particle class
 class Particle{
-  constructor({position, velocity, radius, color}){
+  constructor({position, velocity, radius, color, fades}){
     this.position = position
     this.velocity = velocity
     this.radius = radius
     this.color = color
     this.opacity = 1
+    this.fades = fades
   }
 
   // Draw the projectile on the canvas
@@ -101,7 +111,8 @@ class Particle{
     this.draw()
     this.position.x += this.velocity.x
     this.position.y += this.velocity.y
-    this.opacity -= 0.01
+    if(this.fades)
+      this.opacity -= 0.01
   }
 }
 
@@ -264,6 +275,32 @@ let frames = 0
 // A random number to randomize intervals of Invader spawns
 let randomInterval = Math.floor(Math.random() * 500 + 500)
 
+// Initialize game object to track state of the game
+let game = {
+  over: false,
+  active: true
+}
+
+// Initialize score variable
+let score = 0
+
+// Background stars effect
+for(let i = 0; i < 100; i++){
+  particles.push(new Particle({
+    position: {
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height
+    },
+    velocity: {
+      x: 0,
+      y: 0.4
+    },
+    radius: Math.random() * 2,
+    color: 'white',
+    fades: false
+  }))
+}
+
 // Create the particles   
 function createParticles({object, color}){
 
@@ -278,13 +315,16 @@ function createParticles({object, color}){
         y: (Math.random() - 0.5) * 2
       },
       radius: Math.random() * 3,
-      color: color || 'lightgreen'
+      color: color || 'lightgreen',
+      fades: true
     }))
   }
 }
 
 // The animate function is called repeatedly to update the canvas
 function animate() {
+  if(!game.active) return
+
   window.requestAnimationFrame(animate);
 
   // Set the background of the canvas to black
@@ -296,6 +336,15 @@ function animate() {
 
   // Render the particles 
   particles.forEach((particle, i) => {
+
+    // Reposition background particles
+    if(particle.position.y - particle.radius >= canvas.height)
+    {
+      particle.position.x = Math.random() * canvas.width
+      particle.position.y = -particle.radius
+    }
+
+    // Remove particle when it disappears
     if(particle.opacity <= 0)
     {
       setTimeout(() => {
@@ -322,7 +371,12 @@ function animate() {
     if(invaderProjectile.position.y + invaderProjectile.height >= player.position.y && invaderProjectile.position.x + invaderProjectile.width >= player.position.x && invaderProjectile.position.x <= player.position.x + player.width){
       setTimeout(() => {
         invaderProjectiles.splice(index,1)
+        player.opacity = 0
+        game.over = true
       }, 0)
+      setTimeout(() => {
+        game.active = false
+      }, 2000)
       createParticles({object: player, color: 'purple'})
     }
   })
@@ -364,10 +418,11 @@ function animate() {
 
             // Remove invader and projectile
             if(invaderFound && projectileFound){
-          
-              createParticles({
-                object: invader
-              })
+
+              score += 100
+              scoreEl.innerHTML = score
+
+              createParticles({object: invader})
             
               grid.invaders.splice(i, 1) 
               projectiles.splice(j, 1)
@@ -415,6 +470,8 @@ animate();
 
 // Add event listeners to track the state of the keys
 addEventListener('keydown', ({ key }) => {
+  if(game.over) return
+
   switch (key) {
     case 'a':
       keys.a.pressed = true;
