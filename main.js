@@ -17,7 +17,7 @@ class Player {
     this.velocity = {
       x: 0,
       y: 0
-    };
+    }
 
     // Load the image and set the width and height properties
     // based on the image's dimensions and a scale factor
@@ -71,6 +71,37 @@ class Projectile{
     this.draw()
     this.position.x += this.velocity.x
     this.position.y += this.velocity.y
+  }
+}
+
+// Define the Particle class
+class Particle{
+  constructor({position, velocity, radius, color}){
+    this.position = position
+    this.velocity = velocity
+    this.radius = radius
+    this.color = color
+    this.opacity = 1
+  }
+
+  // Draw the projectile on the canvas
+  draw(){
+    c.save()
+    c.globalAlpha = this.opacity
+    c.beginPath()
+    c.arc(this.position.x,this.position.y,this.radius,0,Math.PI*2)
+    c.fillStyle = this.color
+    c.fill()
+    c.closePath()
+    c.restore()
+  }
+
+  // Update the projectile's position based on its velocity
+  update(){
+    this.draw()
+    this.position.x += this.velocity.x
+    this.position.y += this.velocity.y
+    this.opacity -= 0.01
   }
 }
 
@@ -211,6 +242,9 @@ const grids = []
 // Create an array to store invader projectiles
 const invaderProjectiles = []
 
+// Create an array to store game particles
+const particles = []
+
 // Define the keys object to track the state of each key
 const keys = {
   a: {
@@ -230,6 +264,25 @@ let frames = 0
 // A random number to randomize intervals of Invader spawns
 let randomInterval = Math.floor(Math.random() * 500 + 500)
 
+// Create the particles   
+function createParticles({object, color}){
+
+  for(let i = 0; i < 15; i++){
+    particles.push(new Particle({
+      position: {
+        x: object.position.x + object.width / 2,
+        y: object.position.y + object.height / 2
+      },
+      velocity: {
+        x: (Math.random() - 0.5) * 2,
+        y: (Math.random() - 0.5) * 2
+      },
+      radius: Math.random() * 3,
+      color: color || 'lightgreen'
+    }))
+  }
+}
+
 // The animate function is called repeatedly to update the canvas
 function animate() {
   window.requestAnimationFrame(animate);
@@ -241,6 +294,18 @@ function animate() {
   // Update the player
   player.update();
 
+  // Render the particles 
+  particles.forEach((particle, i) => {
+    if(particle.opacity <= 0)
+    {
+      setTimeout(() => {
+        particles.splice(i, 1)
+      }, 0);
+    }
+    else
+      particle.update()
+  });
+
   // Render out invader projectiles on the canvas
   invaderProjectiles.forEach((invaderProjectile,index) => {
 
@@ -248,14 +313,18 @@ function animate() {
     if(invaderProjectile.position.y + invaderProjectile.height >= canvas.height){
       setTimeout(() => {
         invaderProjectiles.splice(index,1)
-      }, 0);
+      }, 0)
     }
     else
       invaderProjectile.update()
 
     // Collision detection for invader projectile and player
-    if(invaderProjectile.position.y + invaderProjectile.height >= player.position.y && invaderProjectile.position.x + invaderProjectile.width >= player.position.x && invaderProjectile.position.x <= player.position.x + player.width)
-      console.log("END")
+    if(invaderProjectile.position.y + invaderProjectile.height >= player.position.y && invaderProjectile.position.x + invaderProjectile.width >= player.position.x && invaderProjectile.position.x <= player.position.x + player.width){
+      setTimeout(() => {
+        invaderProjectiles.splice(index,1)
+      }, 0)
+      createParticles({object: player, color: 'purple'})
+    }
   })
 
   // Update all projectiles in the projectiles array
@@ -295,6 +364,11 @@ function animate() {
 
             // Remove invader and projectile
             if(invaderFound && projectileFound){
+          
+              createParticles({
+                object: invader
+              })
+            
               grid.invaders.splice(i, 1) 
               projectiles.splice(j, 1)
 
@@ -312,9 +386,9 @@ function animate() {
           }, 0)
 
         }
-      });
+      })
     })
-  });
+  })
 
   // Update the player's velocity based on the state of the keys
   if (keys.a.pressed && player.position.x >= 0) {
